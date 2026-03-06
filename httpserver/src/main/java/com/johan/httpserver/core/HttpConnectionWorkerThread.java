@@ -44,17 +44,17 @@ public class HttpConnectionWorkerThread extends Thread{
             if(ipStream!=null){
                 try {
                     ipStream.close();
-                }catch (IOException e) {}
+                }catch (IOException ignored) {}
             }
             if(opStream!=null){
                 try{
                     opStream.close();
-                }catch (IOException e){}
+                }catch (IOException ignored){}
             }
             if(socket!=null){
                 try{
                     socket.close();
-                }catch (IOException e){}
+                }catch (IOException ignored){}
             }
         }
     }
