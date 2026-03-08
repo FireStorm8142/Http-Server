@@ -1,13 +1,13 @@
 package com.johan.http;
 
-public class HttpStatusCode {
+public enum HttpStatusCode {
     /* ---Client Errors --- */
-    CLIENT_ERROR_400_BAD_REQ(400, "Bad Request");
-    CLIENT_ERROR_401_METHOD_NOT_ALLOWED(401, "Method not allowed");
-    CLIENT_ERROR_400_BAD_REQ(414, "URI too long");
+    CLIENT_ERROR_400_BAD_REQ(400, "Bad Request"),
+    CLIENT_ERROR_401_METHOD_NOT_ALLOWED(401, "Method not allowed"),
+    CLIENT_ERROR_414_URI_TOO_LONG(414, "URI too long"),
     /* ---Server Errors --- */
-    SERVER_ERROR_500_INTERNAL_SERVER_ERROR(500, "Internal server error");
-    SERVER_ERROR_500_NOT_IMPLEMENTED(501, "Not implemented");
+    SERVER_ERROR_500_INTERNAL_SERVER_ERROR(500, "Internal server error"),
+    SERVER_ERROR_501_NOT_IMPLEMENTED(501, "Not implemented");
 
     public final int STATUS_CODE;
     public final String MESSAGE;
