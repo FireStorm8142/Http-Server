@@ -22,6 +22,11 @@ class HttpParserTest {
     }
 
     @Test
+    void parseHttpRequest(){
+        HttpRequest request = null;
+    }
+
+    @Test
     void parseHttpReq() {
         HttpRequest request = null;
         try {

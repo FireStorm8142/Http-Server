@@ -43,7 +43,14 @@ public class HttpParser {
                     if (!methodParsed || !reqTargetParsed) {
                         throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
                     }
+                    try {
+                        req.setHttpVersion(processDataBuffer.toString());
+                    }catch (BadHttpVersionException e) {
+                        throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
+                    }
                     return;
+                }else{
+                    throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
                 }
             }
             if(_byte==SP){
@@ -53,6 +60,7 @@ public class HttpParser {
                     methodParsed = true;
                 }else if (!reqTargetParsed) {
                     LOGGER.debug("Request Line REQ TARGET to process : {}", processDataBuffer.toString());
+                    req.setRequestTarget(processDataBuffer.toString());
                     reqTargetParsed = true;
                 }
                 else{
