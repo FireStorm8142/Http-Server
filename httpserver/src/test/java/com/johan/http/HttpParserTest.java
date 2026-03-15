@@ -8,8 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpParserTest {
@@ -22,11 +21,6 @@ class HttpParserTest {
     }
 
     @Test
-    void parseHttpRequest(){
-        HttpRequest request = null;
-    }
-
-    @Test
     void parseHttpReq() {
         HttpRequest request = null;
         try {
@@ -34,6 +28,7 @@ class HttpParserTest {
         } catch (HttpParsingException e){
             fail(e);
         }
+        assertNotNull(request);
     }
 
     @Test

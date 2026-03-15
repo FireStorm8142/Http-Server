@@ -1,41 +1,29 @@
 package com.johan.http;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public enum HttpVersion {
-    HTTP_1_1("HTTP/1.1", 1, 1);
 
-    public final String Literal;
-    public final int Major;
-    public final int Minor;
-    HttpVersion(String Literal, int Major, int Minor){
-        this.Literal=Literal;
-        this.Major=Major;
-        this.Minor=Minor;
+    HTTP_1_1("HTTP/1.1", 1, 1),
+    HTTP_1_0("HTTP/1.0",1,0);
+
+    public final String literal;
+    public final int major;
+    public final int minor;
+
+    HttpVersion(String literal, int major, int minor){
+        this.literal = literal;
+        this.major = major;
+        this.minor = minor;
     }
 
-    private static final Pattern httpVersionRegexPattern = Pattern.compile("^HTTP/(?<Major>\\d+).(?<Minor>\\d+)");
-
-    public static HttpVersion getBestCompatibleVersion(String literalVersion) throws BadHttpVersionException {
-        Matcher matcher = httpVersionRegexPattern.matcher(literalVersion);
-        if(!matcher.find() || matcher.groupCount() != 2){
-            throw new BadHttpVersionException();
+    public static HttpVersion getBestCompatibleVersion(String version) throws BadHttpVersionException {
+        if(version == null){
+            throw new BadHttpVersionException("Version NULL");
         }
-        int major = Integer.parseInt(matcher.group("Major"));
-        int minor = Integer.parseInt(matcher.group("Minor"));
-        HttpVersion tempBestCompatible = null;
-        for (HttpVersion version : HttpVersion.values()) {
-            if (version.Literal.equals(literalVersion)) {
-                return version;
-            } else {
-                if (version.Major == major) {
-                    if (version.Minor < minor) {
-                        tempBestCompatible = version;
-                    }
-                }
+        for(HttpVersion v : HttpVersion.values()){
+            if(v.literal.equals(version)){
+                return v;
             }
         }
-        return tempBestCompatible;
+        return null;
     }
 }

@@ -3,12 +3,12 @@ package com.johan.http;
 import java.util.HashMap;
 import java.util.Set;
 
-public class HttpRequest extends HttpMessage {
+public class HttpRequest {
 
     private HttpMethod method;
     private String requestTarget;
     private String originalHttpVersion;
-    private HttpVersion bestCompatibleVersion;
+    private HttpVersion getBestCompatibleVersion;
     private HashMap<String, String> headers = new HashMap<>();
 
     HttpRequest() {
@@ -22,13 +22,9 @@ public class HttpRequest extends HttpMessage {
         return requestTarget;
     }
 
-    public HttpVersion getBestCompatibleVersion() {
-        return bestCompatibleVersion;
-    }
+    public HttpVersion getBestCompatibleVersion() { return getBestCompatibleVersion; }
 
-    public String getOriginalHttpVersion() {
-        return  originalHttpVersion;
-    }
+    public String getOriginalHttpVersion() { return  originalHttpVersion; }
 
     public Set<String> getHeaderNames() {
         return headers.keySet();
@@ -48,17 +44,17 @@ public class HttpRequest extends HttpMessage {
         throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_501_NOT_IMPLEMENTED);
     }
 
-    public void setRequestTarget(String requestTarget) {
+    public void setRequestTarget(String requestTarget) throws  HttpParsingException {
         if (requestTarget == null || requestTarget.isEmpty()){
-
+            throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
         }
         this.requestTarget = requestTarget;
     }
 
     public void setHttpVersion(String originalHttpVersion) throws BadHttpVersionException, HttpParsingException {
         this.originalHttpVersion = originalHttpVersion;
-        this.bestCompatibleVersion = HttpVersion.getBestCompatibleVersion(originalHttpVersion);
-        if(this.bestCompatibleVersion == null){
+        this.getBestCompatibleVersion = HttpVersion.getBestCompatibleVersion(originalHttpVersion);
+        if(this.getBestCompatibleVersion == null){
             throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_505_HTTP_VERSION_NOT_SUPPORTED);
         }
     }
