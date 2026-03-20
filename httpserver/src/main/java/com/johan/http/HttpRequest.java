@@ -55,7 +55,7 @@ public class HttpRequest {
         this.originalHttpVersion = originalHttpVersion;
         this.getBestCompatibleVersion = HttpVersion.getBestCompatibleVersion(originalHttpVersion);
         if(this.getBestCompatibleVersion == null){
-            throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_505_HTTP_VERSION_NOT_SUPPORTED);
+            throw new BadHttpVersionException();
         }
     }
 

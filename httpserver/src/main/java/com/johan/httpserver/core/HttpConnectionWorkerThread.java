@@ -22,6 +22,19 @@ public class HttpConnectionWorkerThread extends Thread{
         this.socket=socket;
     }
 
+    //For sending the Error code and Message to Client
+    private void sendErrorResponse(HttpStatusCode code, OutputStream op) throws IOException {
+        String body = code.MESSAGE;
+
+        String response =
+                "HTTP/1.1 " + code.STATUS_CODE + " " + code.MESSAGE + "\r\n" +
+                        "Content-Length: " + body.length() + "\r\n" +
+                        "\r\n" +
+                        body;
+
+        op.write(response.getBytes());
+    }
+
     @Override
     public void run(){
         InputStream ipStream = null;
@@ -33,13 +46,14 @@ public class HttpConnectionWorkerThread extends Thread{
             try {
                 req = HttpParser.parseHttpReq(ipStream);
             }catch (HttpParsingException e){
-                throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
+                sendErrorResponse(e.getErrorCode(), opStream);
+                return;
             }
 
             //Get the file that the user wants
             //finish working on this later
             String path = req.getRequestTarget();
-            if (path.equals("/")){
+            if ("/".equals(path)){
                 path="/Index.html";
             }
 
@@ -70,7 +84,7 @@ public class HttpConnectionWorkerThread extends Thread{
             opStream.write(fileBytes);
 
             LOGGER.info("Connection Processing Finished");
-        }catch(IOException | HttpParsingException e){
+        }catch(IOException e){
             LOGGER.error("Problem with communication", e);
         }
         finally {

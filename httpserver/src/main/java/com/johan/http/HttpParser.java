@@ -22,13 +22,9 @@ public class HttpParser {
         HttpRequest request = new HttpRequest();
         try {
             parseRequestLine(isr, request);
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        try {
             parseHeader(isr, request);
         }catch(IOException e){
-            e.printStackTrace();
+            throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
         }
         parseBody(isr, request);
 
@@ -50,7 +46,8 @@ public class HttpParser {
                     try {
                         req.setHttpVersion(processDataBuffer.toString());
                     }catch (BadHttpVersionException e) {
-                        throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
+                        LOGGER.error("Bad HTTP Version received : {}", e.getMessage());
+                        throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_505_HTTP_VERSION_NOT_SUPPORTED);
                     }
                     return;
                 }else{
@@ -68,13 +65,14 @@ public class HttpParser {
                     reqTargetParsed = true;
                 }
                 else{
-                    throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_401_METHOD_NOT_ALLOWED);
+                    throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
                 }
                 processDataBuffer.delete(0, processDataBuffer.length());
             }else{
                 processDataBuffer.append((char)_byte);
                 if(!methodParsed){
                     if(processDataBuffer.length()>HttpMethod.MAX_LENGTH){
+                        LOGGER.error("Terminating connection, Bad Method received : {}", processDataBuffer.toString());
                         throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_501_NOT_IMPLEMENTED);
                     }
                 }

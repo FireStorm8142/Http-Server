@@ -2,7 +2,7 @@ package com.johan.http;
 
 public class HttpParsingException extends Exception {
 
-    private HttpStatusCode errorCode;
+    private final HttpStatusCode errorCode;
 
     public HttpParsingException(HttpStatusCode errorCode) {
         super(errorCode.MESSAGE);
