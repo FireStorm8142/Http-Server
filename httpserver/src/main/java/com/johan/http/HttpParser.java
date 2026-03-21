@@ -57,8 +57,13 @@ public class HttpParser {
             if(_byte==SP){
                 if (!methodParsed) {
                     LOGGER.debug("Request Line METHOD to process : {}", processDataBuffer.toString());
-                    req.setMethod(processDataBuffer.toString());
-                    methodParsed = true;
+                    try {
+                        req.setMethod(processDataBuffer.toString());
+                        methodParsed = true;
+                    }catch (HttpParsingException e){
+                        LOGGER.error("Invalid HTTP Method received : {}", e.getMessage());
+                        throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_501_NOT_IMPLEMENTED);
+                    }
                 }else if (!reqTargetParsed) {
                     LOGGER.debug("Request Line REQ TARGET to process : {}", processDataBuffer.toString());
                     req.setRequestTarget(processDataBuffer.toString());

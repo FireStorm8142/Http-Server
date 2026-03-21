@@ -16,6 +16,7 @@ import java.nio.file.Files;
 
 public class HttpConnectionWorkerThread extends Thread{
 
+    final String CRLF = "\r\n"; //13, 10
     private final static Logger LOGGER = LoggerFactory.getLogger(HttpConnectionWorkerThread.class);
     private Socket socket;
     public HttpConnectionWorkerThread(Socket socket){
@@ -27,10 +28,10 @@ public class HttpConnectionWorkerThread extends Thread{
         String body = code.MESSAGE;
 
         String response =
-                "HTTP/1.1 " + code.STATUS_CODE + " " + code.MESSAGE + "\r\n" +
-                        "Content-Length: " + body.length() + "\r\n" +
-                        "\r\n" +
-                        body;
+                "HTTP/1.1 " + code.STATUS_CODE + " " + code.MESSAGE + CRLF +
+                "Content-Length: " + body.length() + CRLF +
+                CRLF +
+                body;
 
         op.write(response.getBytes());
     }
@@ -55,22 +56,12 @@ public class HttpConnectionWorkerThread extends Thread{
             String path = req.getRequestTarget();
             if ("/".equals(path)){
                 path="/Index.html";
+            }else{
+                LOGGER.error("Invalid Request Target received : {}", path);
+                throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_404_NOT_FOUND);
             }
 
             File file = new File(System.getProperty("user.dir") + "/httpserver/WebRoot" + path);
-            final String CRLF = "\r\n"; //13, 10
-
-            //File Not Found
-            if(!file.exists()){
-                String body = "404 Not Found";
-                String noresponse =
-                        "HTTP/1.1 404 Not Found" + CRLF +
-                        "Content-Length: " + body.length() + CRLF +
-                        CRLF +
-                        body;
-                opStream.write(noresponse.getBytes());
-                return;
-            }
 
             //Response
             byte[] fileBytes = Files.readAllBytes(file.toPath());
@@ -86,6 +77,12 @@ public class HttpConnectionWorkerThread extends Thread{
             LOGGER.info("Connection Processing Finished");
         }catch(IOException e){
             LOGGER.error("Problem with communication", e);
+        }catch(HttpParsingException e){
+            try {
+                sendErrorResponse(e.getErrorCode(), opStream);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
         finally {
             if(ipStream!=null){
