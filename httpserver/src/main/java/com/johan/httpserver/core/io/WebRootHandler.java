@@ -1,5 +1,10 @@
 package com.johan.httpserver.core.io;
 
+import com.johan.http.HttpParsingException;
+import com.johan.http.HttpStatusCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,6 +12,8 @@ import java.io.IOException;
 import java.net.URLConnection;
 
 public class WebRootHandler {
+    private final static Logger LOGGER = LoggerFactory.getLogger(WebRootHandler.class);
+
     private final File webRoot;
 
     public WebRootHandler(String webRootPath) throws WebRootNotFoundException{
@@ -20,52 +27,61 @@ public class WebRootHandler {
         return relativePath.endsWith("/");
     }
 
-    private boolean CheckIfRelativePathExists(String relativePath){
+    //This method normalizes the path and checks whether
+    //User is attempting a directory traversal attack
+    private File resolveSafeFile(String relativePath) throws IOException {
         File file = new File(webRoot, relativePath);
-        if(!file.exists()) {
-            return true;
+
+        String rootPath = webRoot.getCanonicalPath();
+        String filePath = file.getCanonicalPath();
+
+        if (!filePath.startsWith(rootPath)) {
+            throw new SecurityException("Directory Traversal Attempted");
         }
+
+        return file;
+    }
+
+    public String GetFileType(String relativePath) throws FileNotFoundException, HttpParsingException{
         try {
-            if (!file.getCanonicalPath().startsWith(webRoot.getCanonicalPath())) {
-                return true;
+            if (relativePath.endsWith("/")){
+                relativePath+="Index.html";
             }
-        }catch (Exception e){
-            return false;
+            File file;
+            try {
+                file = resolveSafeFile(relativePath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (!file.exists()){
+                throw new FileNotFoundException("File not found at: "+relativePath);
+            }
+            String mimeType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
+            if (mimeType == null)   return "application/octet-stream";
+            else return mimeType;
+        }catch (SecurityException e){
+            LOGGER.error("Directory Traversal Attempted",e);
+            throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_403_FORBIDDEN);
         }
-        return false;
     }
 
-    public String GetFileType(String relativePath) throws FileNotFoundException{
-        if (CheckIfEndsWithSlash(relativePath)) {
-            relativePath += "Index.html";
-        }
-        if(CheckIfRelativePathExists(relativePath)) {
-            throw new FileNotFoundException("File not found: "+relativePath);
-        }
-        File file = new File(webRoot, relativePath);
-        String mimeType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
-        if(mimeType == null){
-            return "application/octet-stream";
-        }
-        return mimeType;
-    }
-
-    public byte[] GetFileByteArrayData(String relativePath) throws IOException {
-        if (CheckIfEndsWithSlash(relativePath)) {
-            relativePath += "Index.html";
-        }
-        if(CheckIfRelativePathExists(relativePath)) {
-            throw new FileNotFoundException("File not found: "+relativePath);
-        }
-        File file = new File(webRoot, relativePath);
-        FileInputStream fis = new FileInputStream(file);
-        byte[] fileBytes = new byte[(int)file.length()];
+    public byte[] GetFileByteArrayData(String relativePath) throws IOException, HttpParsingException {
         try{
+            if (relativePath.endsWith("/")){
+                relativePath+="Index.html";
+            }
+            File file = resolveSafeFile(relativePath);
+            if(!file.exists()){
+                throw new FileNotFoundException("File not found at: "+relativePath);
+            }
+            FileInputStream fis = new FileInputStream(file);
+            byte[] fileBytes = new byte[(int)file.length()];
             fis.read(fileBytes);
             fis.close();
-        }catch (IOException e){
-            throw new IOException();
+            return fileBytes;
+        }catch (SecurityException e){
+            LOGGER.error("Directory Traversal Attempted",e);
+            throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_403_FORBIDDEN);
         }
-        return fileBytes;
     }
 }

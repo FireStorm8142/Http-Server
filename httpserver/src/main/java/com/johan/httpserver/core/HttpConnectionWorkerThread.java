@@ -51,18 +51,12 @@ public class HttpConnectionWorkerThread extends Thread{
                 return;
             }
 
-            //Serves the index.html file as the default doc
-            //finish working on this later
             String path = req.getRequestTarget();
-            if ("/".equals(path)) {
-                path = "/Index.html";
-            }
-
             WebRootHandler handler;
             try {
                 handler = new WebRootHandler("httpserver/WebRoot");
             } catch (WebRootNotFoundException e) {
-                throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_403_FORBIDDEN);
+                throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_500_INTERNAL_SERVER_ERROR);
             }
             byte[] fileBytes;
             String contentType;
@@ -70,7 +64,10 @@ public class HttpConnectionWorkerThread extends Thread{
                 fileBytes = handler.GetFileByteArrayData(path);
                 contentType = handler.GetFileType(path);
             }catch(IOException e){
+                LOGGER.error("Error fetching File/Content-type", e);
                 throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_404_NOT_FOUND);
+            }catch (HttpParsingException e){
+                throw e;
             }
             //Response
             String response =
