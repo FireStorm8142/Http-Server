@@ -7,12 +7,12 @@ import java.io.IOException;
 import java.net.URLConnection;
 
 public class WebRootHandler {
-    private File webRoot;
+    private final File webRoot;
 
     public WebRootHandler(String webRootPath) throws WebRootNotFoundException{
         webRoot = new File(webRootPath);
         if(!webRoot.exists() || !webRoot.isDirectory()){
-            throw new WebRootNotFoundException();
+            throw new WebRootNotFoundException("Error Fetching WebRoot");
         }
     }
 
@@ -23,7 +23,7 @@ public class WebRootHandler {
     private boolean CheckIfRelativePathExists(String relativePath){
         File file = new File(webRoot, relativePath);
         if(!file.exists()) {
-            return false;
+            return true;
         }
         try {
             if (!file.getCanonicalPath().startsWith(webRoot.getCanonicalPath())) {
@@ -42,7 +42,7 @@ public class WebRootHandler {
         if(CheckIfRelativePathExists(relativePath)) {
             throw new FileNotFoundException("File not found: "+relativePath);
         }
-        File file = new File(webRoot, relativePath);;
+        File file = new File(webRoot, relativePath);
         String mimeType = URLConnection.getFileNameMap().getContentTypeFor(file.getName());
         if(mimeType == null){
             return "application/octet-stream";
