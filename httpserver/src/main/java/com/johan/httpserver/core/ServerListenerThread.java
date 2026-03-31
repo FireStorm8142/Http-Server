@@ -11,15 +11,14 @@ import java.net.Socket;
 public class ServerListenerThread extends Thread{
     private final static Logger LOGGER = LoggerFactory.getLogger(ServerListenerThread.class);
 
-    private final WebRootHandler handler = new WebRootHandler("http/WebRoot");
+    private final WebRootHandler handler;
     private final int port;
-    private final String webRoot;
     private final ServerSocket serverSocket;
 
     public ServerListenerThread(int port, String webRoot) throws IOException, WebRootNotFoundException {
         this.port=port;
-        this.webRoot=webRoot;
         this.serverSocket = new ServerSocket(this.port);
+        this.handler = new WebRootHandler(webRoot);
     }
 
     @Override

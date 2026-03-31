@@ -14,7 +14,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 public class HttpConnectionWorkerThread extends Thread{
-    WebRootHandler handler;
+    private final WebRootHandler handler;
     final String CRLF = "\r\n"; //13, 10
     private final static Logger LOGGER = LoggerFactory.getLogger(HttpConnectionWorkerThread.class);
     private final Socket socket;
