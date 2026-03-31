@@ -5,7 +5,6 @@ import com.johan.http.HttpParsingException;
 import com.johan.http.HttpRequest;
 import com.johan.http.HttpStatusCode;
 import com.johan.httpserver.core.io.WebRootHandler;
-import com.johan.httpserver.core.io.WebRootNotFoundException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -15,12 +14,13 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 public class HttpConnectionWorkerThread extends Thread{
-
+    WebRootHandler handler;
     final String CRLF = "\r\n"; //13, 10
     private final static Logger LOGGER = LoggerFactory.getLogger(HttpConnectionWorkerThread.class);
     private final Socket socket;
-    public HttpConnectionWorkerThread(Socket socket){
+    public HttpConnectionWorkerThread(Socket socket, WebRootHandler handler) {
         this.socket=socket;
+        this.handler=handler;
     }
 
     //For sending the Error code and Message to Client
@@ -52,12 +52,6 @@ public class HttpConnectionWorkerThread extends Thread{
             }
 
             String path = req.getRequestTarget();
-            WebRootHandler handler;
-            try {
-                handler = new WebRootHandler("httpserver/WebRoot");
-            } catch (WebRootNotFoundException e) {
-                throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_500_INTERNAL_SERVER_ERROR);
-            }
             byte[] fileBytes;
             String contentType;
             try {

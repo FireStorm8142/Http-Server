@@ -75,8 +75,7 @@ public class WebRootHandler {
                 throw new FileNotFoundException("File not found at: "+relativePath);
             }
             FileInputStream fis = new FileInputStream(file);
-            byte[] fileBytes = new byte[(int)file.length()];
-            fis.read(fileBytes);
+            byte[] fileBytes = fis.readAllBytes();
             fis.close();
             return fileBytes;
         }catch (SecurityException e){

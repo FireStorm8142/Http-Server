@@ -3,6 +3,8 @@ package com.johan.httpserver;
 import com.johan.httpserver.config.configuration;
 import com.johan.httpserver.config.configmanager;
 import com.johan.httpserver.core.ServerListenerThread;
+import com.johan.httpserver.core.io.WebRootHandler;
+import com.johan.httpserver.core.io.WebRootNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -26,6 +28,8 @@ public class httpserver {
             ServerListenerThread serverListenerThread = new ServerListenerThread(conf.getPort(), conf.getWebroot());
             serverListenerThread.start();
         }catch (IOException e){
+            e.printStackTrace();
+        }catch (WebRootNotFoundException e){
             e.printStackTrace();
         }
     }

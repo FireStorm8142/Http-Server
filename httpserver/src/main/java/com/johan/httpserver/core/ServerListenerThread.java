@@ -1,5 +1,7 @@
 package com.johan.httpserver.core;
 
+import com.johan.httpserver.core.io.WebRootHandler;
+import com.johan.httpserver.core.io.WebRootNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -9,11 +11,12 @@ import java.net.Socket;
 public class ServerListenerThread extends Thread{
     private final static Logger LOGGER = LoggerFactory.getLogger(ServerListenerThread.class);
 
-    private int port;
-    private String webRoot;
-    private ServerSocket serverSocket;
+    private final WebRootHandler handler = new WebRootHandler("http/WebRoot");
+    private final int port;
+    private final String webRoot;
+    private final ServerSocket serverSocket;
 
-    public ServerListenerThread(int port, String webRoot) throws IOException {
+    public ServerListenerThread(int port, String webRoot) throws IOException, WebRootNotFoundException {
         this.port=port;
         this.webRoot=webRoot;
         this.serverSocket = new ServerSocket(this.port);
@@ -28,7 +31,7 @@ public class ServerListenerThread extends Thread{
 
                 LOGGER.info(" Connection accepted: " + socket.getInetAddress());
 
-                HttpConnectionWorkerThread workerThread = new HttpConnectionWorkerThread(socket);
+                HttpConnectionWorkerThread workerThread = new HttpConnectionWorkerThread(socket, handler);
                 workerThread.start();
             }
 
