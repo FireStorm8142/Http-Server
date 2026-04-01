@@ -3,8 +3,8 @@ package com.johan.httpserver.core;
 import com.johan.http.HttpParser;
 import com.johan.http.HttpParsingException;
 import com.johan.http.HttpRequest;
-import com.johan.http.HttpStatusCode;
 import com.johan.httpserver.core.io.WebRootHandler;
+import com.johan.http.HttpResponse;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -15,25 +15,11 @@ import java.net.Socket;
 
 public class HttpConnectionWorkerThread extends Thread{
     private final WebRootHandler handler;
-    final String CRLF = "\r\n"; //13, 10
     private final static Logger LOGGER = LoggerFactory.getLogger(HttpConnectionWorkerThread.class);
     private final Socket socket;
     public HttpConnectionWorkerThread(Socket socket, WebRootHandler handler) {
         this.socket=socket;
         this.handler=handler;
-    }
-
-    //For sending the Error code and Message to Client
-    private void sendErrorResponse(HttpStatusCode code, OutputStream op) throws IOException {
-        String body = code.MESSAGE;
-
-        String response =
-                "HTTP/1.1 " + code.STATUS_CODE + " " + code.MESSAGE + CRLF +
-                "Content-Length: " + body.length() + CRLF +
-                CRLF +
-                body;
-
-        op.write(response.getBytes());
     }
 
     @Override
@@ -44,41 +30,25 @@ public class HttpConnectionWorkerThread extends Thread{
             ipStream = socket.getInputStream();
             opStream = socket.getOutputStream();
             HttpRequest req;
+
+            //Each Thread Sends Request to HttpParser and stores parsed data in HttpRequest class
             try {
                 req = HttpParser.parseHttpReq(ipStream);
             }catch (HttpParsingException e){
-                sendErrorResponse(e.getErrorCode(), opStream);
+                HttpResponse.writeErrorResponse(e.getErrorCode(), opStream);
                 return;
             }
 
-            String path = req.getRequestTarget();
-            byte[] fileBytes;
-            String contentType;
-            try {
-                fileBytes = handler.GetFileByteArrayData(path);
-                contentType = handler.GetFileType(path);
-            }catch(IOException e){
-                LOGGER.error("Error fetching File/Content-type", e);
-                throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_404_NOT_FOUND);
-            }catch (HttpParsingException e){
-                throw e;
-            }
-            //Response
-            String response =
-                    "HTTP/1.1 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
-                    "Content-Length: " + fileBytes.length + CRLF + // Header
-                    "Content-Type: "+contentType+ CRLF + //Add MIME Files later
-                    CRLF;
-
-            opStream.write(response.getBytes());
-            opStream.write(fileBytes);
+            //Create HttpResponse packet if everything went well
+            HttpResponse resp = new HttpResponse(opStream, req, handler);
+            resp.writeResponse();
 
             LOGGER.info("Connection Processing Finished");
         }catch(IOException e){
             LOGGER.error("Problem with communication", e);
         }catch(HttpParsingException e){
             try {
-                sendErrorResponse(e.getErrorCode(), opStream);
+                HttpResponse.writeErrorResponse(e.getErrorCode(), opStream);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
