@@ -16,8 +16,6 @@ public class httpserver {
     {
         LOGGER.info("Server Starting");
 
-        System.out.println("Server starting...");
-
         configmanager.getInstance().loadConfigFile(("httpserver/src/main/resources/http.json"));
         configuration conf = configmanager.getInstance().getCurrentConfig();
 

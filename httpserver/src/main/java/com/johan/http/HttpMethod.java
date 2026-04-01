@@ -1,7 +1,7 @@
 package com.johan.http;
 
 public enum HttpMethod {
-    GET, HEAD;
+    GET, POST, HEAD;
     public static final int MAX_LENGTH;
 
     //this checks all the valid METHODS declared in the server and sets max_length as the biggest header

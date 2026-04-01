@@ -23,10 +23,10 @@ public class HttpParser {
         try {
             parseRequestLine(isr, request);
             parseHeader(isr, request);
+            parseBody(iptStream, request);
         }catch(IOException e){
             throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
         }
-        parseBody(isr, request);
 
         return request;
     }
@@ -93,16 +93,16 @@ public class HttpParser {
             if(_byte==CR){
                 _byte=isr.read();
                 if(_byte==LF) {
-                        String line = processDataBuffer.toString().trim();
-                        if (line.isEmpty()) {
-                            if(!headerParsed){
-                                throw new  HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
-                            }
-                            return;
+                    String line = processDataBuffer.toString().trim();
+                    if (line.isEmpty()) {
+                        if(!headerParsed){
+                            throw new  HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
                         }
-                        processingHeaderField(processDataBuffer, req);
-                        headerParsed = true;
-                        processDataBuffer.delete(0, processDataBuffer.length());
+                        return;
+                    }
+                    processingHeaderField(processDataBuffer, req);
+                    headerParsed = true;
+                    processDataBuffer.delete(0, processDataBuffer.length());
                 } else{
                     throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
                 }
@@ -129,7 +129,23 @@ public class HttpParser {
         req.addHeader(fieldName, fieldValue);
     }
 
-    private static void parseBody(InputStreamReader isr, HttpRequest req) {
+    private static void parseBody(InputStream is, HttpRequest req) throws HttpParsingException, IOException{
+        if (!(req.getMethod()).equals("POST"))  return;
 
+        String bodyLength=req.getHeader("content-length");
+        if (bodyLength==null)   throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_411_LENGTH_REQUIRED);
+
+        int totalRead=0;
+        int contentLength=Integer.parseInt(bodyLength);
+        byte[] bufferBody = new byte[contentLength];
+        while(totalRead < contentLength){
+            int bytesRead = is.read(bufferBody, totalRead, contentLength-totalRead);
+            if (bytesRead==-1)  break;
+            totalRead+=bytesRead;
+        }
+        //The body gets stored as a string which is fine for now
+        //Make it into a byte array later to handle binary files
+        String body = new String(bufferBody);
+        req.setBody(body);
     }
 }

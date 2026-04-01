@@ -23,10 +23,6 @@ public class WebRootHandler {
         }
     }
 
-    private boolean CheckIfEndsWithSlash(String relativePath){
-        return relativePath.endsWith("/");
-    }
-
     //This method normalizes the path and checks whether
     //User is attempting a directory traversal attack
     private File resolveSafeFile(String relativePath) throws IOException {
@@ -44,9 +40,6 @@ public class WebRootHandler {
 
     public String GetFileType(String relativePath) throws FileNotFoundException, HttpParsingException{
         try {
-            if (relativePath.endsWith("/")){
-                relativePath+="Index.html";
-            }
             File file;
             try {
                 file = resolveSafeFile(relativePath);
@@ -67,9 +60,6 @@ public class WebRootHandler {
 
     public byte[] GetFileByteArrayData(String relativePath) throws IOException, HttpParsingException {
         try{
-            if (relativePath.endsWith("/")){
-                relativePath+="Index.html";
-            }
             File file = resolveSafeFile(relativePath);
             if(!file.exists()){
                 throw new FileNotFoundException("File not found at: "+relativePath);

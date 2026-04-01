@@ -9,13 +9,14 @@ public class HttpRequest {
     private String requestTarget;
     private String originalHttpVersion;
     private HttpVersion getBestCompatibleVersion;
+    private String body;
     private HashMap<String, String> headers = new HashMap<>();
 
     HttpRequest() {
     }
 
-    public HttpMethod getMethod() {
-        return method;
+    public String getMethod() {
+        return method.toString();
     }
 
     public String getRequestTarget() {
@@ -25,6 +26,8 @@ public class HttpRequest {
     public HttpVersion getBestCompatibleVersion() { return getBestCompatibleVersion; }
 
     public String getOriginalHttpVersion() { return  originalHttpVersion; }
+
+    public String getBody() { return body;}
 
     public Set<String> getHeaderNames() {
         return headers.keySet();
@@ -57,6 +60,11 @@ public class HttpRequest {
         if(this.getBestCompatibleVersion == null){
             throw new BadHttpVersionException();
         }
+    }
+
+    //Reminder to change this method later
+    public void setBody(String body) throws HttpParsingException {
+        this.body=body;
     }
 
     void addHeader(String headerName, String HeaderField){
