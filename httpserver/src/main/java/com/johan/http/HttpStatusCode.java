@@ -7,6 +7,7 @@ public enum HttpStatusCode {
     CLIENT_ERROR_403_FORBIDDEN(403, "Forbidden"),
     CLIENT_ERROR_404_NOT_FOUND(404, "Request Target not found"),
     CLIENT_ERROR_411_LENGTH_REQUIRED(411, "Length Required"),
+    CLIENT_ERROR_413_PAYLOAD_TOO_LARGE(413, "Payload Too Large"),
     CLIENT_ERROR_414_URI_TOO_LONG(414, "URI too long"),
     /* ---Server Errors --- */
     SERVER_ERROR_500_INTERNAL_SERVER_ERROR(500, "Internal server error"),

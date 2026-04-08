@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 public class HttpParser {
@@ -17,12 +16,11 @@ public class HttpParser {
     private static final int LF = 0x0A; //10
 
     public static HttpRequest parseHttpReq(InputStream iptStream) throws HttpParsingException {
-        InputStreamReader isr = new InputStreamReader(iptStream, StandardCharsets.US_ASCII);
 
         HttpRequest request = new HttpRequest();
         try {
-            parseRequestLine(isr, request);
-            parseHeader(isr, request);
+            parseRequestLine(iptStream, request);
+            parseHeader(iptStream, request);
             parseBody(iptStream, request);
         }catch(IOException e){
             throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
@@ -30,7 +28,7 @@ public class HttpParser {
 
         return request;
     }
-    private static void parseRequestLine(InputStreamReader isr, HttpRequest req) throws IOException, HttpParsingException {
+    private static void parseRequestLine(InputStream isr, HttpRequest req) throws IOException, HttpParsingException {
         boolean methodParsed = false;
         boolean reqTargetParsed = false;
         StringBuilder processDataBuffer = new StringBuilder();
@@ -85,7 +83,7 @@ public class HttpParser {
         }
     }
 
-    private static void parseHeader(InputStreamReader isr, HttpRequest req) throws HttpParsingException, IOException {
+    private static void parseHeader(InputStream isr, HttpRequest req) throws HttpParsingException, IOException {
         StringBuilder processDataBuffer = new StringBuilder();
         boolean headerParsed = false;
         int _byte;
@@ -137,15 +135,17 @@ public class HttpParser {
 
         int totalRead=0;
         int contentLength=Integer.parseInt(bodyLength);
+        if (contentLength>1000000) throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_413_PAYLOAD_TOO_LARGE);
         byte[] bufferBody = new byte[contentLength];
         while(totalRead < contentLength){
             int bytesRead = is.read(bufferBody, totalRead, contentLength-totalRead);
             if (bytesRead==-1)  break;
             totalRead+=bytesRead;
         }
+        if(totalRead != contentLength) throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_411_LENGTH_REQUIRED);
         //The body gets stored as a string which is fine for now
         //Make it into a byte array later to handle binary files
-        String body = new String(bufferBody);
+        String body = new String(bufferBody, StandardCharsets.UTF_8);
         req.setBody(body);
     }
 }

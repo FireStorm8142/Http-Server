@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 
 public class HttpResponse {
 
-    OutputStream opStream;
-    HttpRequest req;
+    private final OutputStream opStream;
+    private final HttpRequest req;
     private final WebRootHandler handler;
 
     public HttpResponse(OutputStream opStream, HttpRequest req, WebRootHandler handler) throws HttpParsingException {
