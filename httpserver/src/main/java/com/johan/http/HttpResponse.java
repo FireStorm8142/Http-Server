@@ -23,7 +23,27 @@ public class HttpResponse {
     private final static Logger LOGGER = LoggerFactory.getLogger(HttpResponse.class);
 
     public void writeResponse() throws HttpParsingException, IOException {
+        if (req.getMethod() == HttpMethod.GET) {
+            handleGet();
+        }
+        else if (req.getMethod() == HttpMethod.POST) {
+            handlePost();
+        }
+    }
 
+    //Method for sending the Error code and Message to Client
+    public static void writeErrorResponse(HttpStatusCode code, OutputStream opStream) throws IOException {
+        String body = code.MESSAGE;
+
+        String response =
+                "HTTP/1.1 " + code.STATUS_CODE + " " + code.MESSAGE + CRLF +
+                        "Content-Length: " + body.length() + CRLF +
+                        CRLF +
+                        body;
+        opStream.write(response.getBytes());
+    }
+
+    private void handleGet() throws HttpParsingException, IOException {
         //Try fetching Target that user has specified
         String path = req.getRequestTarget();
         byte[] fileBytes;
@@ -48,15 +68,9 @@ public class HttpResponse {
         opStream.write(fileBytes);
     }
 
-    //Method for sending the Error code and Message to Client
-    public static void writeErrorResponse(HttpStatusCode code, OutputStream opStream) throws IOException {
-        String body = code.MESSAGE;
+    private void handlePost() {
+        if ("/sign".equals(req.getRequestTarget())) {
 
-        String response =
-                "HTTP/1.1 " + code.STATUS_CODE + " " + code.MESSAGE + CRLF +
-                        "Content-Length: " + body.length() + CRLF +
-                        CRLF +
-                        body;
-        opStream.write(response.getBytes());
+        }
     }
 }

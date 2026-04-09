@@ -15,8 +15,8 @@ public class HttpRequest {
     HttpRequest() {
     }
 
-    public String getMethod() {
-        return method.toString();
+    public HttpMethod getMethod() {
+        return method;
     }
 
     public String getRequestTarget() {
@@ -54,7 +54,7 @@ public class HttpRequest {
         this.requestTarget = requestTarget;
     }
 
-    public void setHttpVersion(String originalHttpVersion) throws BadHttpVersionException, HttpParsingException {
+    public void setHttpVersion(String originalHttpVersion) throws BadHttpVersionException {
         this.originalHttpVersion = originalHttpVersion;
         this.getBestCompatibleVersion = HttpVersion.getBestCompatibleVersion(originalHttpVersion);
         if(this.getBestCompatibleVersion == null){
@@ -63,7 +63,7 @@ public class HttpRequest {
     }
 
     //Reminder to change this method later
-    public void setBody(String body) throws HttpParsingException {
+    public void setBody(String body) {
         this.body=body;
     }
 
