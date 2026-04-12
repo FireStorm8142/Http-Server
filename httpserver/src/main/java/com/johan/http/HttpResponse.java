@@ -2,6 +2,9 @@ package com.johan.http;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.FileWriter;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 import com.johan.httpserver.core.io.WebRootHandler;
 import org.slf4j.Logger;
@@ -59,7 +62,7 @@ public class HttpResponse {
         }
         //Response to the client
         String response =
-                "HTTP/1.1 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
+                 req.getBestCompatibleVersion().literal + " 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
                         "Content-Length: " + fileBytes.length + CRLF + // Header
                         "Content-Type: "+contentType+ CRLF + //Add MIME Files later
                         CRLF;
@@ -68,9 +71,17 @@ public class HttpResponse {
         opStream.write(fileBytes);
     }
 
-    private void handlePost() {
+    private void handlePost() throws HttpParsingException{
         if ("/sign".equals(req.getRequestTarget())) {
-
+            String body = req.getBody();
+            if (body.length()>100000) throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_413_PAYLOAD_TOO_LARGE);
+            String[] pair = body.split("=", 2);
+            try(FileWriter writer = new FileWriter("httpserver/WebRoot/Data.txt", true)) {
+                String value = URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+                writer.write(value + "\n");
+            }catch(IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

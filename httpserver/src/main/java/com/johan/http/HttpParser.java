@@ -128,7 +128,7 @@ public class HttpParser {
     }
 
     private static void parseBody(InputStream is, HttpRequest req) throws HttpParsingException, IOException{
-        if (!(req.getMethod()).equals("POST"))  return;
+        if (!(req.getMethod() == HttpMethod.POST))  return;
 
         String bodyLength=req.getHeader("content-length");
         if (bodyLength==null)   throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_411_LENGTH_REQUIRED);
