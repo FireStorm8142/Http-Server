@@ -19,8 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const text = await response.text();
 
-            // show response
-            alert(text);
 
         } catch (err) {
             console.error("Error:", err);

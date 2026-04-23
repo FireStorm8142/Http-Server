@@ -5,6 +5,9 @@ import java.io.OutputStream;
 import java.io.FileWriter;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 import com.johan.httpserver.core.io.WebRootHandler;
 import org.slf4j.Logger;
@@ -49,6 +52,22 @@ public class HttpResponse {
     private void handleGet() throws HttpParsingException, IOException {
         //Try fetching Target that user has specified
         String path = req.getRequestTarget();
+        if ("/Names.html".equals(path)) {
+            String html = Files.readString(
+                    Paths.get("httpserver/WebRoot/Names.html")
+            );
+            List<String> names = Files.readAllLines(
+                    Paths.get("httpserver/WebRoot/Data.txt")
+            );
+            StringBuilder list = new StringBuilder();
+            for (String name : names) {
+                list.append("<li>").append(name).append("</li>");
+            }
+            html = html.replace("{{names}}", list.toString());
+            byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
+            response(bytes, "text/html");
+            return;
+        }
         byte[] fileBytes;
         String contentType;
         try {
@@ -60,28 +79,55 @@ public class HttpResponse {
         }catch (HttpParsingException e){
             throw e;
         }
+        response(fileBytes, contentType);
+    }
+
+    private void handlePost() throws HttpParsingException, IOException {
+        if ("/sign".equals(req.getRequestTarget())) {
+            String html = Files.readString(
+                    Paths.get("httpserver/WebRoot/names.html")
+            );
+
+            String body = req.getBody();
+            if (body.length()>100000) throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_413_PAYLOAD_TOO_LARGE);
+            String[] pair = body.split("=", 2);
+            try(FileWriter writer = new FileWriter("httpserver/WebRoot/Data.txt", true)) {
+                String value = URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+                value = sanitiseHtml(value);
+                writer.write(value + CRLF);
+            }catch(IOException e) {
+                e.printStackTrace();
+            }
+
+            List<String> names = Files.readAllLines(
+                    Paths.get("httpserver/WebRoot/Data.txt")
+            );
+            StringBuilder list = new StringBuilder();
+            for (String name : names){
+                list.append("<li>").append(name).append("</li>");
+            }
+
+            html = html.replace("{{names}}", list.toString());
+            byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
+            response(bytes, "text/html");
+        }
+    }
+
+    private String sanitiseHtml(String s) {
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    private void response(byte[] fileBytes, String contentType) throws IOException {
         //Response to the client
         String response =
-                 req.getBestCompatibleVersion().literal + " 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
+                req.getBestCompatibleVersion().literal + " 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
                         "Content-Length: " + fileBytes.length + CRLF + // Header
                         "Content-Type: "+contentType+ CRLF + //Add MIME Files later
                         CRLF;
 
         opStream.write(response.getBytes());
         opStream.write(fileBytes);
-    }
-
-    private void handlePost() throws HttpParsingException{
-        if ("/sign".equals(req.getRequestTarget())) {
-            String body = req.getBody();
-            if (body.length()>100000) throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_413_PAYLOAD_TOO_LARGE);
-            String[] pair = body.split("=", 2);
-            try(FileWriter writer = new FileWriter("httpserver/WebRoot/Data.txt", true)) {
-                String value = URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
-                writer.write(value + "\n");
-            }catch(IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }

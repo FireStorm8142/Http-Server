@@ -1,2 +1,3 @@
 .idea/
 httpserver/target
+httpserver/WebRoot/Data.txt
