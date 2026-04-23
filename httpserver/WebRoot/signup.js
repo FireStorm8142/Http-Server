@@ -19,9 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const text = await response.text();
 
-
         } catch (err) {
             console.error("Error:", err);
+        }
+        finally{
+            window.location.href="/Names.html";
         }
     });
 });

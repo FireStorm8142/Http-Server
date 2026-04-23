@@ -52,6 +52,8 @@ public class HttpResponse {
     private void handleGet() throws HttpParsingException, IOException {
         //Try fetching Target that user has specified
         String path = req.getRequestTarget();
+
+        //Names.html is a dynamic site, we have to replace the placeholder {{names}} with Data.txt names
         if ("/Names.html".equals(path)) {
             String html = Files.readString(
                     Paths.get("httpserver/WebRoot/Names.html")
@@ -68,6 +70,7 @@ public class HttpResponse {
             response(bytes, "text/html");
             return;
         }
+
         byte[] fileBytes;
         String contentType;
         try {
@@ -84,10 +87,6 @@ public class HttpResponse {
 
     private void handlePost() throws HttpParsingException, IOException {
         if ("/sign".equals(req.getRequestTarget())) {
-            String html = Files.readString(
-                    Paths.get("httpserver/WebRoot/names.html")
-            );
-
             String body = req.getBody();
             if (body.length()>100000) throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_413_PAYLOAD_TOO_LARGE);
             String[] pair = body.split("=", 2);
@@ -98,18 +97,6 @@ public class HttpResponse {
             }catch(IOException e) {
                 e.printStackTrace();
             }
-
-            List<String> names = Files.readAllLines(
-                    Paths.get("httpserver/WebRoot/Data.txt")
-            );
-            StringBuilder list = new StringBuilder();
-            for (String name : names){
-                list.append("<li>").append(name).append("</li>");
-            }
-
-            html = html.replace("{{names}}", list.toString());
-            byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
-            response(bytes, "text/html");
         }
     }
 

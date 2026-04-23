@@ -1,0 +1,34 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+h2 {
+    margin-top: 40px;
+    font-size: 2.5rem;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 40px auto;
+    width: 320px;
+}
+
+li {
+    background: #1e293b;
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+}
+
+li:hover {
+    background: #334155;
+    transform: scale(1.03);
+}
