@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
 public class HttpParser {
@@ -15,14 +16,18 @@ public class HttpParser {
     private static final int CR = 0x0D; //13
     private static final int LF = 0x0A; //10
 
-    public static HttpRequest parseHttpReq(InputStream iptStream) throws HttpParsingException {
+    public static HttpRequest parseHttpReq(InputStream iptStream) throws HttpParsingException, SocketTimeoutException {
 
         HttpRequest request = new HttpRequest();
         try {
             parseRequestLine(iptStream, request);
             parseHeader(iptStream, request);
             parseBody(iptStream, request);
-        }catch(IOException e){
+        }
+        catch(SocketTimeoutException e){
+            throw e;
+        }
+        catch(IOException e){
             throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQ);
         }
 

@@ -55,16 +55,10 @@ public class HttpResponse {
 
         //Names.html is a dynamic site, we have to replace the placeholder {{names}} with Data.txt names
         if ("/Names.html".equals(path)) {
-            String html = Files.readString(
-                    Paths.get("httpserver/WebRoot/Names.html")
-            );
-            List<String> names = Files.readAllLines(
-                    Paths.get("httpserver/WebRoot/Data.txt")
-            );
+            String html = Files.readString(Paths.get("httpserver/WebRoot/Names.html"));
+            List<String> names = Files.readAllLines(Paths.get("httpserver/WebRoot/Data.txt"));
             StringBuilder list = new StringBuilder();
-            for (String name : names) {
-                list.append("<li>").append(name).append("</li>");
-            }
+            for (String name : names) list.append("<li>").append(name).append("</li>");
             html = html.replace("{{names}}", list.toString());
             byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
             response(bytes, "text/html");
@@ -112,6 +106,7 @@ public class HttpResponse {
                 req.getBestCompatibleVersion().literal + " 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
                         "Content-Length: " + fileBytes.length + CRLF + // Header
                         "Content-Type: "+contentType+ CRLF + //Add MIME Files later
+                        "Connection: keep-alive" + CRLF +
                         CRLF;
 
         opStream.write(response.getBytes());

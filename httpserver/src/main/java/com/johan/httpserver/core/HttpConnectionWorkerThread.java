@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class HttpConnectionWorkerThread extends Thread{
     private final WebRootHandler handler;
@@ -26,27 +27,40 @@ public class HttpConnectionWorkerThread extends Thread{
     public void run(){
         InputStream ipStream = null;
         OutputStream opStream = null;
+        boolean keepAlive = true;
         try {
             ipStream = socket.getInputStream();
             opStream = socket.getOutputStream();
-            HttpRequest req;
 
             //Each Thread Sends Request to HttpParser and stores parsed data in HttpRequest class
-            try {
-                req = HttpParser.parseHttpReq(ipStream);
-            }catch (HttpParsingException e){
-                HttpResponse.writeErrorResponse(e.getErrorCode(), opStream);
-                return;
+            socket.setSoTimeout(5000);
+
+            while(!socket.isClosed() && keepAlive) {
+                HttpRequest req;
+                try {
+                    req = HttpParser.parseHttpReq(ipStream);
+                } catch (HttpParsingException e) {
+                    HttpResponse.writeErrorResponse(e.getErrorCode(), opStream);
+                    return;
+                }
+
+                //Create HttpResponse packet if everything went well
+                HttpResponse resp = new HttpResponse(opStream, req, handler);
+                resp.writeResponse();
+
+                String connection = req.getHeader("Connection");
+                if ("close".equalsIgnoreCase(connection)) keepAlive = false;
             }
 
-            //Create HttpResponse packet if everything went well
-            HttpResponse resp = new HttpResponse(opStream, req, handler);
-            resp.writeResponse();
-
             LOGGER.info("Connection Processing Finished");
-        }catch(IOException e){
+        }
+        catch(SocketTimeoutException e){
+            LOGGER.info("Connection Timed Out");
+        }
+        catch(IOException e){
             LOGGER.error("Problem with communication", e);
-        }catch(HttpParsingException e){
+        }
+        catch(HttpParsingException e){
             try {
                 HttpResponse.writeErrorResponse(e.getErrorCode(), opStream);
             } catch (IOException ex) {
