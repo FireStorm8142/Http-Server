@@ -7,13 +7,11 @@ public class HttpRequest {
 
     private HttpMethod method;
     private String requestTarget;
-    private String originalHttpVersion;
-    private HttpVersion getBestCompatibleVersion;
+    private HttpVersion httpVersion;
     private String body;
     private HashMap<String, String> headers = new HashMap<>();
 
-    HttpRequest() {
-    }
+    HttpRequest() {}
 
     public HttpMethod getMethod() {
         return method;
@@ -23,19 +21,13 @@ public class HttpRequest {
         return requestTarget;
     }
 
-    public HttpVersion getBestCompatibleVersion() { return getBestCompatibleVersion; }
-
-    public String getOriginalHttpVersion() { return  originalHttpVersion; }
+    public HttpVersion getHttpVersion() { return httpVersion; }
 
     public String getBody() { return body;}
 
-    public Set<String> getHeaderNames() {
-        return headers.keySet();
-    }
+    public Set<String> getHeaderNames() { return headers.keySet(); }
 
-    public String  getHeader(String headerName) {
-        return headers.get(headerName.toLowerCase());
-    }
+    public String  getHeader(String headerName) { return headers.get(headerName.toLowerCase()); }
 
     void setMethod(String methodName) throws HttpParsingException {
         for (HttpMethod method: HttpMethod.values()) {
@@ -55,19 +47,14 @@ public class HttpRequest {
     }
 
     public void setHttpVersion(String originalHttpVersion) throws BadHttpVersionException {
-        this.originalHttpVersion = originalHttpVersion;
-        this.getBestCompatibleVersion = HttpVersion.getBestCompatibleVersion(originalHttpVersion);
-        if(this.getBestCompatibleVersion == null){
+        this.httpVersion = HttpVersion.getBestCompatibleVersion(originalHttpVersion);
+        if(this.httpVersion == null){
             throw new BadHttpVersionException();
         }
     }
 
     //Reminder to change this method later
-    public void setBody(String body) {
-        this.body=body;
-    }
+    public void setBody(String body) { this.body=body; }
 
-    void addHeader(String headerName, String HeaderField){
-        headers.put(headerName.toLowerCase(), HeaderField);
-    }
+    void addHeader(String headerName, String HeaderField){ headers.put(headerName.toLowerCase(), HeaderField); }
 }

@@ -103,7 +103,7 @@ public class HttpResponse {
     private void response(byte[] fileBytes, String contentType) throws IOException {
         //Response to the client
         String response =
-                req.getBestCompatibleVersion().literal + " 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
+                req.getHttpVersion().literal + " 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
                         "Content-Length: " + fileBytes.length + CRLF + // Header
                         "Content-Type: "+contentType+ CRLF + //Add MIME Files later
                         "Connection: keep-alive" + CRLF +
