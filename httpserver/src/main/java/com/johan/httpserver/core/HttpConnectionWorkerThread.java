@@ -14,7 +14,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
-public class HttpConnectionWorkerThread extends Thread{
+public class HttpConnectionWorkerThread implements Runnable{
     private final WebRootHandler handler;
     private final static Logger LOGGER = LoggerFactory.getLogger(HttpConnectionWorkerThread.class);
     private final Socket socket;
@@ -37,12 +37,7 @@ public class HttpConnectionWorkerThread extends Thread{
 
             while(!socket.isClosed() && keepAlive) {
                 HttpRequest req;
-                try {
-                    req = HttpParser.parseHttpReq(ipStream);
-                } catch (HttpParsingException e) {
-                    HttpResponse.writeErrorResponse(e.getErrorCode(), opStream);
-                    return;
-                }
+                req = HttpParser.parseHttpReq(ipStream);
 
                 //Create HttpResponse packet if everything went well
                 HttpResponse resp = new HttpResponse(opStream, req, handler);

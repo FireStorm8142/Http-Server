@@ -1,14 +1,11 @@
 package com.johan.http;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.FileWriter;
+import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.io.ByteArrayOutputStream;
 import java.util.zip.GZIPOutputStream;
 
 import com.johan.httpserver.core.io.WebRootHandler;
@@ -80,7 +77,7 @@ public class HttpResponse {
             fileBytes = handler.GetFileByteArrayData(path);
             contentType = handler.GetFileType(path);
         }catch(IOException e){
-            LOGGER.error("Error fetching File/Content-type", e);
+            LOGGER.warn("File Not Found: {}", path);
             throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_404_NOT_FOUND);
         }
         if (isCompressible(contentType) && encodeResponse) {
