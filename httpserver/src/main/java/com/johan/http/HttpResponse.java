@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.io.ByteArrayOutputStream;
+import java.util.zip.GZIPOutputStream;
 
 import com.johan.httpserver.core.io.WebRootHandler;
 import org.slf4j.Logger;
@@ -50,8 +52,11 @@ public class HttpResponse {
     }
 
     private void handleGet() throws HttpParsingException, IOException {
-        //Try fetching Target that user has specified
+        //Try fetching Target that user has specified, also check if client supports encoding
         String path = req.getRequestTarget();
+        String encodeSupported = req.getHeader("Accept-Encoding");
+        boolean encodeResponse = encodeSupported != null && encodeSupported.contains("gzip");
+        boolean compressed = false;
 
         //Names.html is a dynamic site, we have to replace the placeholder {{names}} with Data.txt names
         if ("/Names.html".equals(path)) {
@@ -61,7 +66,11 @@ public class HttpResponse {
             for (String name : names) list.append("<li>").append(name).append("</li>");
             html = html.replace("{{names}}", list.toString());
             byte[] bytes = html.getBytes(StandardCharsets.UTF_8);
-            response(bytes, "text/html");
+            if (encodeResponse){
+                bytes = compress(bytes);
+                compressed = true;
+            }
+            response(bytes, "text/html", compressed);
             return;
         }
 
@@ -73,13 +82,15 @@ public class HttpResponse {
         }catch(IOException e){
             LOGGER.error("Error fetching File/Content-type", e);
             throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_404_NOT_FOUND);
-        }catch (HttpParsingException e){
-            throw e;
         }
-        response(fileBytes, contentType);
+        if (isCompressible(contentType) && encodeResponse) {
+            fileBytes = compress(fileBytes);
+            compressed = true;
+        }
+        response(fileBytes, contentType, compressed);
     }
 
-    private void handlePost() throws HttpParsingException, IOException {
+    private void handlePost() throws HttpParsingException{
         if ("/sign".equals(req.getRequestTarget())) {
             String body = req.getBody();
             if (body.length()>100000) throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_413_PAYLOAD_TOO_LARGE);
@@ -94,22 +105,37 @@ public class HttpResponse {
         }
     }
 
+    private void response(byte[] fileBytes, String contentType, boolean compress) throws IOException {
+        //Response to the client
+        String response =
+                req.getHttpVersion().literal + " 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
+                        "Content-Length: " + fileBytes.length + CRLF + // Header
+                        "Content-Type: "+contentType+ CRLF + //Add MIME Files later
+                        "Connection: " + ("close".equalsIgnoreCase(req.getHeader("Connection")) ? "close" : "keep-alive") + CRLF +
+                        ((compress) ? "Content-Encoding: gzip" + CRLF : "") +
+                        CRLF;
+
+        opStream.write(response.getBytes());
+        opStream.write(fileBytes);
+    }
+
     private String sanitiseHtml(String s) {
         return s.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
     }
 
-    private void response(byte[] fileBytes, String contentType) throws IOException {
-        //Response to the client
-        String response =
-                req.getHttpVersion().literal + " 200 OK" + CRLF + // Status Line : HTTP Version, Response_code, Response_msg
-                        "Content-Length: " + fileBytes.length + CRLF + // Header
-                        "Content-Type: "+contentType+ CRLF + //Add MIME Files later
-                        "Connection: keep-alive" + CRLF +
-                        CRLF;
+    private boolean isCompressible(String contentType){
+        return contentType.startsWith("text/") ||
+                contentType.equals("application/json") ||
+                contentType.equals("application/javascript");
+    }
 
-        opStream.write(response.getBytes());
-        opStream.write(fileBytes);
+    private byte[] compress(byte[] fileData) throws IOException{
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try(GZIPOutputStream gzip = new GZIPOutputStream(bos)){
+            gzip.write(fileData);
+        }
+        return bos.toByteArray();
     }
 }
