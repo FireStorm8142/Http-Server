@@ -6,24 +6,23 @@
 
 # 🌐 HTTP Server in Java : Low-Level HTTP/1.1 Implementation
 
-This is a minimal, Multi-threaded HTTP/1.1 server I built from scratch in Java. This project focuses on understanding **raw socket communication, HTTP parsing, Basic security features and Response generation** without using any frameworks like Spring.      
+This is a Multi-threaded HTTP/1.1 server I built from scratch in Java. This project focuses on understanding **raw socket communication, HTTP parsing, Endpoint handling, Basic security features and Response generation** without using any frameworks like Spring.      
 This server implements some core HTTP/1.1 parsing and error handling principles based on [RFC 7230](https://datatracker.ietf.org/doc/html/rfc7230) (HTTP Protocol).
 
 ## 🏗️ System Architecture
 
-* ***HttpConnectionWorkerThread*** : Creates a thread and handles each client requests in it.
+* ***HttpConnectionWorkerThread*** : Assigns virtual thread and handles complete lifecycle of client connections.
 * ***HttpParser*** : Parses the raw HTTP requests (Request line, Headers and Body) into structured data.
 * ***HttpRequest*** : Stores method, target, version, headers and body.
-* ***HttpResponse*** : Generates Responses packets or Error response packets and serves files.
+* ***HttpResponse*** : Generates Responses packets or Error Response packets and serves files.
 * ***WebRootHandler*** : Normalizes, Resolves and Validates the path requested by client. Safely reads and serves files .
 * ***Custom Exception Classes*** : Exception classes like HttpParsingException, BadHttpVersionException, HttpConfigException are custom-built classes to handle and log the various exceptions that can show up.
 
 ## 🎯 What This Project Demonstrates
 
 * Low-level socket programming
-* Multi-threaded server design
+* Virtual Thread Concurrency (Java 21+)
 * Designing modular, extensible server architecture
-* Stream-based I/O handling using `InputStream` / `OutputStream`
 * HTTP protocol parsing and validation
 * Defensive parsing of malformed HTTP requests
 * Secure file serving and path validation
@@ -31,10 +30,13 @@ This server implements some core HTTP/1.1 parsing and error handling principles 
 ## ⚙️ Key Features
 
 * Byte-level custom-built HTTP parser
-* Thread-per-connection concurrency
-* Proper Logging of server operations (using slf4j Logger)
+* Virtual-Thread-per-connection concurrency
+* Connection Keep-Alive Support
+* Gzip Compression (Accept-Encoding Negotiation)
+* Proper Logging of server operations (using SLF4J Logger)
 * Directory Traversal Attack Protection
-* Static file serving from WebRoot
+* Dynamic HTML File Serving
+* Static & Binary file serving from WebRoot
 * Proper HTTP error handling (Client Error Codes(4xx), Server Error Codes (5xx))
 
 ## 🚀 Installation & Usage
@@ -62,24 +64,24 @@ you can play around with different variations of the URL and try different Metho
 ## 🔄 Request Flow
 
 1. Client connects
-2. New Thread created
+2. Virtual Thread assigned
 3. Request parsed
-4. Request object created
-5. Response generated
-6. File served or error response returned
-7. Thread closed
+4. Request object created & validated
+5. Route resolved & validated
+6. Response generated (optional gzip compression)
+7. Response sent and File served
+8. Thread reused (keep-alive) or closed
 
 ## ⚠️ Current Limitations
 
-* Blocking I/O
-* Model is inefficient for large no. of users
-* No keep-alive
+* HTTP/2 Not Supported
+* No Chunked Tranfer Encoding
+* No Cookie/Session Management
 * No HTTPS
-* No Binary file serving
 
 
 ## 📌 Notes
 
 * This project is designed for learning purposes and is not production-ready. It's just a simple implementation of how servers like Apache or Nginx work at its core. I am still working on adding new features and functionality regularly.
 
-* This project was built in IntelliJ IDEA using Maven as a project manager, there might be some issues if you try to run it in VSCode or other code editor's, ensure that you have the necessary extensions (**[Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-maven)**) installed, VSCode should then detect the pom.xml file and automatically set up the environment.
+* This project was built in IntelliJ IDEA using Maven project manager, there might be some issues if you try to run it in VSCode or other code editor's, ensure that you have the necessary extensions (**[Extension Pack for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-maven)**) installed, VSCode should then detect the pom.xml file and automatically set up the environment.
